@@ -3,890 +3,1290 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arc USDC Transfer</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>ArcPay — Arc Testnet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --surface2: #1a1a24;
-      --border: #2a2a3a;
-      --border-bright: #3d3d55;
-      --accent: #5B6EF5;
-      --accent-glow: rgba(91, 110, 245, 0.25);
-      --accent2: #00E5B0;
-      --accent2-glow: rgba(0, 229, 176, 0.2);
-      --text: #f0f0f8;
-      --text-muted: #7070a0;
-      --text-dim: #404060;
-      --success: #00E5B0;
-      --error: #FF4D6D;
-      --warning: #FFB547;
+      --bg: #07080f;
+      --surface: #0e0f1a;
+      --surface2: #161724;
+      --surface3: #1e1f30;
+      --border: #232438;
+      --border2: #2e2f4a;
+      --accent: #4F6EF7;
+      --accent-dim: rgba(79,110,247,0.15);
+      --accent-glow: rgba(79,110,247,0.3);
+      --green: #00D4AA;
+      --green-dim: rgba(0,212,170,0.12);
+      --green-glow: rgba(0,212,170,0.25);
+      --orange: #FF8C42;
+      --orange-dim: rgba(255,140,66,0.12);
+      --red: #FF4D6D;
+      --red-dim: rgba(255,77,109,0.1);
+      --text: #e8e9f5;
+      --text2: #8889b0;
+      --text3: #454668;
+      --usdc: #2775CA;
+      --eurc: #1A9FD4;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
       overflow-x: hidden;
     }
 
-    /* Arka plan efekti */
+    /* Grid noise texture */
     body::before {
-      content: '';
-      position: fixed;
-      top: -40%;
-      left: -20%;
-      width: 80%;
-      height: 80%;
-      background: radial-gradient(ellipse, rgba(91,110,245,0.07) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
-    body::after {
-      content: '';
-      position: fixed;
-      bottom: -30%;
-      right: -10%;
-      width: 60%;
-      height: 60%;
-      background: radial-gradient(ellipse, rgba(0,229,176,0.05) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image:
+        linear-gradient(rgba(79,110,247,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,110,247,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events:none;
+      z-index:0;
     }
 
-    .container {
-      width: 100%;
-      max-width: 460px;
-      position: relative;
-      z-index: 1;
+    /* Glow blobs */
+    .blob1 {
+      position:fixed; top:-200px; left:-100px;
+      width:600px; height:600px; border-radius:50%;
+      background: radial-gradient(circle, rgba(79,110,247,0.06) 0%, transparent 70%);
+      pointer-events:none; z-index:0;
+    }
+    .blob2 {
+      position:fixed; bottom:-200px; right:-100px;
+      width:500px; height:500px; border-radius:50%;
+      background: radial-gradient(circle, rgba(0,212,170,0.05) 0%, transparent 70%);
+      pointer-events:none; z-index:0;
     }
 
-    /* Üst başlık */
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-      animation: fadeUp 0.6s ease both;
+    /* NAV */
+    nav {
+      position: sticky; top:0; z-index:100;
+      background: rgba(7,8,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+      animation: fadeDown 0.5s ease both;
     }
 
-    .logo-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 8px;
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
     }
 
-    .logo-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent2);
-      box-shadow: 0 0 12px var(--accent2-glow);
-      animation: pulse 2s ease-in-out infinite;
+    .nav-logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 800; color: white;
     }
 
-    .logo-text {
-      font-family: 'Space Mono', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    .title {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
+    .nav-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 700;
       color: var(--text);
     }
 
-    .title span {
-      color: var(--accent);
-    }
+    .nav-title span { color: var(--accent); }
 
-    .subtitle {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-top: 6px;
-    }
-
-    /* Ana kart */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      position: relative;
-      overflow: hidden;
-      animation: fadeUp 0.6s ease 0.1s both;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      opacity: 0.5;
-    }
-
-    /* Cüzdan bölümü */
-    .wallet-section {
-      margin-bottom: 24px;
-    }
-
-    .section-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 10px;
-    }
-
-    .wallet-btn {
-      width: 100%;
-      padding: 14px 20px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: all 0.2s ease;
-      gap: 12px;
-    }
-
-    .wallet-btn:hover {
-      border-color: var(--accent);
-      background: rgba(91,110,245,0.08);
-    }
-
-    .wallet-btn.connected {
-      border-color: var(--accent2);
-      background: rgba(0,229,176,0.05);
-    }
-
-    .wallet-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #F6851B, #E4761B);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-
-    .wallet-info {
-      flex: 1;
-      text-align: left;
-    }
-
-    .wallet-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .wallet-address {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .wallet-status {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      flex-shrink: 0;
-    }
-
-    .wallet-status.online {
-      background: var(--accent2);
-      box-shadow: 0 0 8px var(--accent2-glow);
-    }
-
-    /* Bakiye kutusu */
-    .balance-box {
-      display: none;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-top: 12px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .balance-box.visible {
-      display: flex;
-      animation: fadeUp 0.3s ease both;
-    }
-
-    .balance-label {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .balance-amount {
-      font-family: 'Space Mono', monospace;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--accent2);
-    }
-
-    .balance-unit {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-left: 4px;
-    }
-
-    /* Ayraç */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 24px 0;
-    }
-
-    /* Form alanları */
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      transition: all 0.2s ease;
-      outline: none;
-    }
-
-    .form-input::placeholder {
-      color: var(--text-dim);
-    }
-
-    .form-input:focus {
-      border-color: var(--accent);
-      background: rgba(91,110,245,0.05);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    .form-input.address-input {
-      font-family: 'Space Mono', monospace;
-      font-size: 12px;
-    }
-
-    /* Miktar satırı */
-    .amount-row {
-      display: flex;
-      gap: 10px;
-      align-items: stretch;
-    }
-
-    .amount-row .form-input {
-      flex: 1;
-    }
-
-    .max-btn {
-      padding: 0 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--accent);
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
+    .nav-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; font-weight: 500;
+      background: var(--orange-dim);
+      color: var(--orange);
+      border: 1px solid rgba(255,140,66,0.2);
+      padding: 3px 8px; border-radius: 20px;
       letter-spacing: 0.05em;
     }
 
-    .max-btn:hover {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-    }
+    .nav-right { display:flex; align-items:center; gap:12px; }
 
-    /* Hızlı miktar butonları */
-    .quick-amounts {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .quick-btn {
-      flex: 1;
-      padding: 8px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
-    }
-
-    .quick-btn:hover {
-      border-color: var(--accent);
+    .connect-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(79,110,247,0.3);
+      border-radius: 10px;
       color: var(--accent);
-      background: var(--accent-glow);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .connect-btn:hover { background: rgba(79,110,247,0.25); }
+    .connect-btn.connected {
+      background: var(--green-dim);
+      border-color: rgba(0,212,170,0.3);
+      color: var(--green);
     }
 
-    /* Gönder butonu */
-    .send-btn {
-      width: 100%;
-      padding: 16px;
-      background: var(--accent);
-      border: none;
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text3);
+    }
+    .status-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green-glow);
+      animation: pulse 2s infinite;
+    }
+
+    /* MAIN LAYOUT */
+    .main {
+      position: relative; z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex; gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 14px;
-      color: white;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
+      padding: 4px;
+      width: fit-content;
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s ease 0.1s both;
+    }
+
+    .tab {
+      padding: 9px 20px;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 500;
+      color: var(--text2);
       cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: 8px;
+      transition: all 0.2s;
+      border: none; background: transparent;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      background: var(--surface3);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* DASHBOARD */
+    #page-dashboard { display:block; }
+    #page-transfer { display:none; }
+    #page-history { display:none; }
+
+    /* TOKEN CARDS */
+    .token-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.5s ease 0.15s both;
+    }
+
+    .token-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
       position: relative;
       overflow: hidden;
-      letter-spacing: 0.01em;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: default;
+    }
+    .token-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
     }
 
+    .token-card::before {
+      content:'';
+      position:absolute; top:0; left:0; right:0; height:2px;
+    }
+    .token-card.usdc::before { background: linear-gradient(90deg, var(--usdc), transparent); }
+    .token-card.eurc::before { background: linear-gradient(90deg, var(--eurc), transparent); }
+
+    .token-card-bg {
+      position:absolute; top:-20px; right:-20px;
+      width:120px; height:120px; border-radius:50%;
+      opacity:0.06;
+    }
+    .token-card.usdc .token-card-bg { background: var(--usdc); }
+    .token-card.eurc .token-card-bg { background: var(--eurc); }
+
+    .token-header {
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:20px;
+    }
+
+    .token-icon {
+      width:38px; height:38px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; font-weight:800;
+      font-family:'Syne',sans-serif;
+      flex-shrink:0;
+    }
+    .token-icon.usdc { background: rgba(39,117,202,0.15); color:#5B9FE8; }
+    .token-icon.eurc { background: rgba(26,159,212,0.15); color:#5BC4E8; }
+
+    .token-name {
+      font-family:'Syne',sans-serif;
+      font-size:15px; font-weight:700;
+    }
+    .token-network {
+      font-size:11px; color:var(--text2);
+      font-family:'IBM Plex Mono',monospace;
+    }
+
+    .token-balance {
+      font-family:'Syne',sans-serif;
+      font-size:30px; font-weight:800;
+      color:var(--text);
+      margin-bottom:4px;
+      letter-spacing:-1px;
+    }
+
+    .token-usd {
+      font-size:13px; color:var(--text2);
+    }
+
+    .token-actions {
+      display:flex; gap:8px; margin-top:20px;
+    }
+
+    .token-action-btn {
+      flex:1; padding:9px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:10px;
+      color:var(--text2);
+      font-size:12px; font-weight:500;
+      cursor:pointer;
+      transition:all 0.2s;
+      font-family:'DM Sans',sans-serif;
+      text-align:center;
+    }
+    .token-action-btn:hover {
+      background:var(--surface3);
+      color:var(--text);
+      border-color:var(--border2);
+    }
+
+    /* STATS ROW */
+    .stats-row {
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:12px; margin-bottom:24px;
+      animation: fadeUp 0.5s ease 0.2s both;
+    }
+
+    .stat-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px 20px;
+    }
+
+    .stat-label {
+      font-size:11px; color:var(--text2);
+      font-family:'IBM Plex Mono',monospace;
+      letter-spacing:0.05em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .stat-value {
+      font-family:'Syne',sans-serif;
+      font-size:22px; font-weight:700;
+      color:var(--text);
+    }
+
+    .stat-sub {
+      font-size:11px; color:var(--text3);
+      margin-top:4px;
+    }
+
+    /* RECENT TRANSACTIONS (dashboard) */
+    .section-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:14px;
+    }
+
+    .section-title {
+      font-family:'Syne',sans-serif;
+      font-size:16px; font-weight:700;
+    }
+
+    .section-link {
+      font-size:12px; color:var(--accent);
+      cursor:pointer; background:none; border:none;
+      font-family:'DM Sans',sans-serif;
+    }
+    .section-link:hover { opacity:0.7; }
+
+    .tx-list {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+      animation: fadeUp 0.5s ease 0.25s both;
+    }
+
+    .tx-item {
+      display:flex; align-items:center; gap:14px;
+      padding:16px 20px;
+      border-bottom:1px solid var(--border);
+      transition:background 0.15s;
+    }
+    .tx-item:last-child { border-bottom:none; }
+    .tx-item:hover { background:var(--surface2); }
+
+    .tx-icon {
+      width:38px; height:38px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; flex-shrink:0;
+    }
+    .tx-icon.send { background:var(--orange-dim); }
+    .tx-icon.receive { background:var(--green-dim); }
+
+    .tx-info { flex:1; }
+    .tx-type {
+      font-size:13px; font-weight:500; color:var(--text);
+      margin-bottom:2px;
+    }
+    .tx-addr {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px; color:var(--text2);
+    }
+    .tx-right { text-align:right; }
+    .tx-amount {
+      font-family:'Syne',sans-serif;
+      font-size:14px; font-weight:700;
+    }
+    .tx-amount.send { color:var(--orange); }
+    .tx-amount.receive { color:var(--green); }
+    .tx-time { font-size:11px; color:var(--text3); margin-top:2px; }
+
+    .tx-empty {
+      padding:48px 20px;
+      text-align:center;
+      color:var(--text3);
+      font-size:13px;
+    }
+
+    /* TRANSFER PAGE */
+    .transfer-layout {
+      display:grid; grid-template-columns:1fr 400px;
+      gap:24px; align-items:start;
+    }
+
+    .transfer-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:28px;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .transfer-card-title {
+      font-family:'Syne',sans-serif;
+      font-size:18px; font-weight:700;
+      margin-bottom:24px;
+      display:flex; align-items:center; gap:10px;
+    }
+
+    .card-icon {
+      width:36px; height:36px; border-radius:10px;
+      background:var(--accent-dim);
+      border:1px solid rgba(79,110,247,0.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px;
+    }
+
+    /* Token selector */
+    .token-selector {
+      display:flex; gap:8px; margin-bottom:20px;
+    }
+
+    .token-sel-btn {
+      flex:1; padding:12px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      color:var(--text2);
+      font-size:13px; font-weight:500;
+      cursor:pointer;
+      transition:all 0.2s;
+      font-family:'DM Sans',sans-serif;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .token-sel-btn:hover { border-color:var(--border2); color:var(--text); }
+    .token-sel-btn.active {
+      background:var(--accent-dim);
+      border-color:rgba(79,110,247,0.4);
+      color:var(--accent);
+    }
+
+    .form-label {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px; font-weight:500;
+      letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--text3); margin-bottom:8px; display:block;
+    }
+
+    .form-input {
+      width:100%;
+      padding:14px 16px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      color:var(--text);
+      font-family:'DM Sans',sans-serif;
+      font-size:14px;
+      outline:none;
+      transition:all 0.2s;
+      margin-bottom:16px;
+    }
+    .form-input::placeholder { color:var(--text3); }
+    .form-input:focus {
+      border-color:rgba(79,110,247,0.5);
+      background:rgba(79,110,247,0.04);
+      box-shadow:0 0 0 3px rgba(79,110,247,0.1);
+    }
+    .form-input.mono { font-family:'IBM Plex Mono',monospace; font-size:12px; }
+
+    .amount-wrapper {
+      position:relative; margin-bottom:16px;
+    }
+    .amount-wrapper .form-input { margin-bottom:0; padding-right:80px; }
+    .max-tag {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px; font-weight:500;
+      color:var(--accent);
+      background:var(--accent-dim);
+      border:1px solid rgba(79,110,247,0.2);
+      padding:4px 10px; border-radius:6px;
+      cursor:pointer;
+    }
+    .max-tag:hover { background:rgba(79,110,247,0.25); }
+
+    .quick-row {
+      display:flex; gap:8px; margin-bottom:20px;
+    }
+    .quick-chip {
+      flex:1; padding:8px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:8px;
+      color:var(--text2);
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px;
+      cursor:pointer;
+      transition:all 0.2s; text-align:center;
+    }
+    .quick-chip:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+    .send-btn {
+      width:100%; padding:16px;
+      background: linear-gradient(135deg, var(--accent), #6B7FF8);
+      border:none; border-radius:14px;
+      color:white;
+      font-family:'Syne',sans-serif;
+      font-size:15px; font-weight:700;
+      cursor:pointer;
+      transition:all 0.2s;
+      position:relative; overflow:hidden;
+      letter-spacing:0.02em;
+    }
     .send-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);
     }
-
     .send-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(91,110,245,0.4);
+      transform:translateY(-2px);
+      box-shadow:0 12px 32px rgba(79,110,247,0.4);
     }
+    .send-btn:disabled { opacity:0.35; cursor:not-allowed; }
 
-    .send-btn:active:not(:disabled) {
-      transform: translateY(0);
+    /* SWAP CARD */
+    .swap-box {
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:12px;
     }
-
-    .send-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    .swap-box-label {
+      font-size:11px; color:var(--text2); margin-bottom:10px;
+      display:flex; justify-content:space-between;
     }
-
-    .send-btn.loading {
-      pointer-events: none;
+    .swap-token-row {
+      display:flex; align-items:center; justify-content:space-between;
     }
-
-    .btn-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+    .swap-amount {
+      font-family:'Syne',sans-serif;
+      font-size:28px; font-weight:800;
+      background:none; border:none; color:var(--text);
+      width:150px; outline:none;
     }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: none;
+    .swap-token-pill {
+      display:flex; align-items:center; gap:8px;
+      background:var(--surface3);
+      border:1px solid var(--border2);
+      border-radius:20px;
+      padding:8px 14px;
+      font-family:'Syne',sans-serif;
+      font-size:14px; font-weight:700;
     }
-
-    .send-btn.loading .spinner {
-      display: block;
+    .swap-arrow-btn {
+      width:100%; height:40px;
+      display:flex; align-items:center; justify-content:center;
+      position:relative; margin:4px 0;
     }
+    .swap-arrow-btn::before {
+      content:'';
+      position:absolute; left:0; right:0; top:50%;
+      height:1px; background:var(--border);
+    }
+    .swap-arrow-circle {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--surface3);
+      border:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; position:relative; z-index:1;
+      transition:all 0.2s; font-size:16px;
+    }
+    .swap-arrow-circle:hover {
+      background:var(--accent-dim);
+      border-color:rgba(79,110,247,0.4);
+      transform:rotate(180deg);
+    }
+    .swap-info {
+      padding:12px 14px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin-bottom:16px;
+      font-size:12px; color:var(--text2);
+      line-height:1.8;
+    }
+    .swap-info-row {
+      display:flex; justify-content:space-between;
+    }
+    .swap-info-row span:last-child { color:var(--text); font-weight:500; }
 
-    /* Sonuç kutusu */
+    /* RESULT BOX */
     .result-box {
-      display: none;
-      border-radius: 14px;
-      padding: 18px 20px;
-      margin-top: 16px;
-      animation: fadeUp 0.3s ease both;
+      border-radius:14px; padding:16px 18px;
+      margin-top:16px; display:none;
+      animation:fadeUp 0.3s ease both;
     }
-
     .result-box.success {
-      display: block;
-      background: rgba(0,229,176,0.06);
-      border: 1px solid rgba(0,229,176,0.25);
+      display:block;
+      background:rgba(0,212,170,0.06);
+      border:1px solid rgba(0,212,170,0.2);
     }
-
     .result-box.error {
-      display: block;
-      background: rgba(255,77,109,0.06);
-      border: 1px solid rgba(255,77,109,0.25);
+      display:block;
+      background:var(--red-dim);
+      border:1px solid rgba(255,77,109,0.2);
     }
-
     .result-title {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 8px;
+      font-size:13px; font-weight:600; margin-bottom:6px;
     }
-
-    .result-box.success .result-title { color: var(--success); }
-    .result-box.error .result-title { color: var(--error); }
-
+    .result-box.success .result-title { color:var(--green); }
+    .result-box.error .result-title { color:var(--red); }
     .result-hash {
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      color: var(--text-muted);
-      word-break: break-all;
-      line-height: 1.6;
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px; color:var(--text2);
+      word-break:break-all; line-height:1.7;
     }
-
     .result-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--accent2);
-      text-decoration: none;
-      transition: opacity 0.2s;
+      display:inline-flex; align-items:center; gap:5px;
+      margin-top:10px; font-size:12px; font-weight:500;
+      color:var(--green); text-decoration:none;
+    }
+    .result-link:hover { opacity:0.7; }
+
+    /* HISTORY PAGE */
+    .history-filters {
+      display:flex; gap:8px; margin-bottom:20px;
+      animation:fadeUp 0.4s ease both;
+    }
+    .filter-btn {
+      padding:8px 16px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:20px;
+      color:var(--text2); font-size:12px;
+      cursor:pointer; transition:all 0.2s;
+      font-family:'DM Sans',sans-serif;
+    }
+    .filter-btn:hover { color:var(--text); border-color:var(--border2); }
+    .filter-btn.active {
+      background:var(--accent-dim);
+      border-color:rgba(79,110,247,0.3);
+      color:var(--accent);
     }
 
-    .result-link:hover { opacity: 0.7; }
-
-    /* Ağ bilgisi */
-    .network-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 20px;
-      animation: fadeUp 0.6s ease 0.2s both;
+    .history-list {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:18px; overflow:hidden;
+      animation:fadeUp 0.4s ease 0.1s both;
     }
 
-    .net-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--warning);
-      box-shadow: 0 0 8px rgba(255,181,71,0.4);
-      flex-shrink: 0;
+    .history-item {
+      display:grid;
+      grid-template-columns:auto 1fr auto auto;
+      align-items:center; gap:16px;
+      padding:18px 24px;
+      border-bottom:1px solid var(--border);
+      transition:background 0.15s;
+    }
+    .history-item:last-child { border-bottom:none; }
+    .history-item:hover { background:var(--surface2); }
+
+    .hi-icon {
+      width:40px; height:40px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px;
+    }
+    .hi-icon.send { background:var(--orange-dim); }
+    .hi-icon.receive { background:var(--green-dim); }
+
+    .hi-info {}
+    .hi-type { font-size:14px; font-weight:500; margin-bottom:3px; }
+    .hi-addr {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px; color:var(--text2);
     }
 
-    .net-text {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
+    .hi-amount {
+      font-family:'Syne',sans-serif;
+      font-size:15px; font-weight:700;
+      text-align:right;
     }
+    .hi-amount.send { color:var(--orange); }
+    .hi-amount.receive { color:var(--green); }
 
-    .net-text strong {
-      color: var(--warning);
-      font-weight: 700;
+    .hi-status {
+      text-align:right;
     }
+    .hi-badge {
+      display:inline-block;
+      font-size:10px; font-weight:500;
+      padding:3px 8px; border-radius:6px;
+      font-family:'IBM Plex Mono',monospace;
+      letter-spacing:0.05em;
+    }
+    .hi-badge.confirmed {
+      background:var(--green-dim); color:var(--green);
+    }
+    .hi-time { font-size:11px; color:var(--text3); margin-top:4px; }
 
-    /* Animasyonlar */
+    /* SPINNER */
+    .spinner {
+      width:16px; height:16px;
+      border:2px solid rgba(255,255,255,0.2);
+      border-top-color:white;
+      border-radius:50%;
+      animation:spin 0.7s linear infinite;
+      display:none;
+    }
+    .send-btn.loading .spinner { display:inline-block; }
+    .btn-content { display:flex; align-items:center; justify-content:center; gap:8px; }
+
+    /* ANIMATIONS */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity:0; transform:translateY(16px); }
+      to { opacity:1; transform:translateY(0); }
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes fadeDown {
+      from { opacity:0; transform:translateY(-10px); }
+      to { opacity:1; transform:translateY(0); }
     }
-
+    @keyframes spin { to { transform:rotate(360deg); } }
     @keyframes pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent2-glow); }
-      50% { opacity: 0.6; box-shadow: 0 0 16px var(--accent2-glow); }
+      0%,100% { box-shadow:0 0 6px var(--green-glow); }
+      50% { box-shadow:0 0 14px var(--green-glow); }
     }
 
-    /* Alt bilgi */
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      animation: fadeUp 0.6s ease 0.3s both;
+    /* RESPONSIVE */
+    @media(max-width:768px) {
+      .token-grid { grid-template-columns:1fr; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .transfer-layout { grid-template-columns:1fr; }
+      .history-item { grid-template-columns:auto 1fr auto; }
+      .hi-status { display:none; }
     }
-
-    .footer-text {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    .footer-text a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-    .footer-text a:hover { color: var(--accent2); }
   </style>
 </head>
 <body>
 
-<div class="container">
+<div class="blob1"></div>
+<div class="blob2"></div>
 
-  <!-- Başlık -->
-  <div class="header">
-    <div class="logo-row">
-      <div class="logo-dot"></div>
-      <span class="logo-text">Arc Testnet</span>
-      <div class="logo-dot"></div>
-    </div>
-    <h1 class="title">USDC <span>Transfer</span></h1>
-    <p class="subtitle">Arc Testnet üzerinde anında gönder</p>
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">A</div>
+    <span class="nav-title">Arc<span>Pay</span></span>
+    <span class="nav-badge">TESTNET</span>
   </div>
-
-  <!-- Ağ bildirimi -->
-  <div class="network-badge">
-    <div class="net-dot"></div>
-    <span class="net-text"><strong>TESTNET</strong> — Gerçek para değil, güvenle test et</span>
-  </div>
-
-  <!-- Ana kart -->
-  <div class="card">
-
-    <!-- Cüzdan bölümü -->
-    <div class="wallet-section">
-      <div class="section-label">Cüzdan</div>
-
-      <button class="wallet-btn" id="walletBtn" onclick="baglanCuzdan()">
-        <div class="wallet-icon">🦊</div>
-        <div class="wallet-info">
-          <div class="wallet-name" id="walletName">MetaMask ile Bağlan</div>
-          <div class="wallet-address" id="walletAddr">Cüzdanını bağla</div>
-        </div>
-        <div class="wallet-status" id="walletStatus"></div>
-      </button>
-
-      <div class="balance-box" id="balanceBox">
-        <span class="balance-label">USDC Bakiyesi</span>
-        <div>
-          <span class="balance-amount" id="balanceAmount">—</span>
-          <span class="balance-unit">USDC</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Transfer formu -->
-    <div class="form-group">
-      <label class="form-label">Alıcı Adres</label>
-      <input
-        type="text"
-        class="form-input address-input"
-        id="aliciAdres"
-        placeholder="0x..."
-      />
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Miktar</label>
-      <div class="amount-row">
-        <input
-          type="number"
-          class="form-input"
-          id="miktar"
-          placeholder="0.00"
-          min="0"
-          step="0.01"
-        />
-        <button class="max-btn" onclick="maxMiktar()">MAX</button>
-      </div>
-      <div class="quick-amounts">
-        <button class="quick-btn" onclick="setMiktar('0.1')">0.1</button>
-        <button class="quick-btn" onclick="setMiktar('0.5')">0.5</button>
-        <button class="quick-btn" onclick="setMiktar('1')">1.0</button>
-        <button class="quick-btn" onclick="setMiktar('5')">5.0</button>
-      </div>
-    </div>
-
-    <button class="send-btn" id="sendBtn" onclick="gonderUSDC()" disabled>
-      <div class="btn-content">
-        <div class="spinner" id="spinner"></div>
-        <span id="sendBtnText">Önce cüzdanını bağla</span>
-      </div>
+  <div class="nav-right">
+    <button class="connect-btn" id="connectBtn" onclick="baglan()">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="connectLabel">Cüzdan Bağla</span>
     </button>
+  </div>
+</nav>
 
-    <!-- Sonuç -->
-    <div class="result-box" id="resultBox">
-      <div class="result-title" id="resultTitle"></div>
-      <div class="result-hash" id="resultHash"></div>
-      <a class="result-link" id="resultLink" href="#" target="_blank">
-        ArcScan'de görüntüle →
-      </a>
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchPage('dashboard',this)">Dashboard</button>
+    <button class="tab" onclick="switchPage('transfer',this)">Transfer</button>
+    <button class="tab" onclick="switchPage('history',this)">Geçmiş</button>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard">
+
+    <!-- Token cards -->
+    <div class="token-grid">
+      <div class="token-card usdc">
+        <div class="token-card-bg"></div>
+        <div class="token-header">
+          <div class="token-icon usdc">$</div>
+          <div>
+            <div class="token-name">USD Coin</div>
+            <div class="token-network">USDC · Arc Testnet</div>
+          </div>
+        </div>
+        <div class="token-balance" id="usdcBalance">—</div>
+        <div class="token-usd" id="usdcUsd">Bağlan, bakiyeni gör</div>
+        <div class="token-actions">
+          <button class="token-action-btn" onclick="switchPage('transfer', document.querySelectorAll('.tab')[1]); setToken('usdc')">Gönder</button>
+          <button class="token-action-btn" onclick="window.open('https://faucet.circle.com','_blank')">Faucet</button>
+        </div>
+      </div>
+
+      <div class="token-card eurc">
+        <div class="token-card-bg"></div>
+        <div class="token-header">
+          <div class="token-icon eurc">€</div>
+          <div>
+            <div class="token-name">Euro Coin</div>
+            <div class="token-network">EURC · Arc Testnet</div>
+          </div>
+        </div>
+        <div class="token-balance" id="eurcBalance">—</div>
+        <div class="token-usd" id="eurcUsd">Bağlan, bakiyeni gör</div>
+        <div class="token-actions">
+          <button class="token-action-btn" onclick="switchPage('transfer', document.querySelectorAll('.tab')[1]); setToken('eurc')">Gönder</button>
+          <button class="token-action-btn" onclick="window.open('https://faucet.circle.com','_blank')">Faucet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Toplam İşlem</div>
+        <div class="stat-value" id="statTxCount">0</div>
+        <div class="stat-sub">Arc Testnet</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Toplam Gönderim</div>
+        <div class="stat-value" id="statSent">0 USDC</div>
+        <div class="stat-sub">Bu oturumda</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ağ</div>
+        <div class="stat-value" style="font-size:15px;color:var(--green)">Aktif ✓</div>
+        <div class="stat-sub">Chain ID: 5042002</div>
+      </div>
+    </div>
+
+    <!-- Recent txs -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">Son İşlemler</div>
+        <button class="section-link" onclick="switchPage('history', document.querySelectorAll('.tab')[2])">Tümünü gör →</button>
+      </div>
+      <div class="tx-list" id="dashTxList">
+        <div class="tx-empty">Henüz işlem yok — cüzdanını bağla ve transfer yap!</div>
+      </div>
     </div>
 
   </div>
 
-  <!-- Alt bilgi -->
-  <div class="footer">
-    <p class="footer-text">
-      İşlemler <a href="https://testnet.arcscan.app" target="_blank">testnet.arcscan.app</a>'te görünür
-    </p>
+  <!-- TRANSFER PAGE -->
+  <div id="page-transfer">
+    <div class="transfer-layout">
+
+      <!-- Transfer formu -->
+      <div class="transfer-card">
+        <div class="transfer-card-title">
+          <div class="card-icon">↗</div>
+          Token Gönder
+        </div>
+
+        <label class="form-label">Token Seç</label>
+        <div class="token-selector" style="margin-bottom:20px">
+          <button class="token-sel-btn active" id="selUsdc" onclick="setToken('usdc')">
+            <span style="color:#5B9FE8;font-weight:700">$</span> USDC
+          </button>
+          <button class="token-sel-btn" id="selEurc" onclick="setToken('eurc')">
+            <span style="color:#5BC4E8;font-weight:700">€</span> EURC
+          </button>
+        </div>
+
+        <label class="form-label">Alıcı Adres</label>
+        <input type="text" class="form-input mono" id="aliciAdres" placeholder="0x...">
+
+        <label class="form-label">Miktar</label>
+        <div class="amount-wrapper">
+          <input type="number" class="form-input" id="miktar" placeholder="0.00" min="0" step="0.01">
+          <span class="max-tag" onclick="maxMiktar()">MAX</span>
+        </div>
+
+        <div class="quick-row">
+          <button class="quick-chip" onclick="setMiktar('0.1')">0.1</button>
+          <button class="quick-chip" onclick="setMiktar('0.5')">0.5</button>
+          <button class="quick-chip" onclick="setMiktar('1')">1.0</button>
+          <button class="quick-chip" onclick="setMiktar('5')">5.0</button>
+          <button class="quick-chip" onclick="setMiktar('10')">10</button>
+        </div>
+
+        <button class="send-btn" id="sendBtn" onclick="gonder()" disabled>
+          <div class="btn-content">
+            <div class="spinner" id="spinner"></div>
+            <span id="sendBtnText">Cüzdan bağlı değil</span>
+          </div>
+        </button>
+
+        <div class="result-box" id="resultBox">
+          <div class="result-title" id="resultTitle"></div>
+          <div class="result-hash" id="resultHash"></div>
+          <a class="result-link" id="resultLink" href="#" target="_blank">ArcScan'de görüntüle →</a>
+        </div>
+      </div>
+
+      <!-- Swap kutusu -->
+      <div>
+        <div class="transfer-card" style="animation-delay:0.1s">
+          <div class="transfer-card-title">
+            <div class="card-icon" style="background:var(--green-dim);border-color:rgba(0,212,170,0.2)">⇄</div>
+            Token Swap
+          </div>
+
+          <div class="swap-box">
+            <div class="swap-box-label">
+              <span>Gönder</span>
+              <span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:10px">Bakiye: <span id="swapFromBal">—</span></span>
+            </div>
+            <div class="swap-token-row">
+              <input type="number" class="swap-amount" id="swapFrom" placeholder="0" oninput="calcSwap()" min="0">
+              <div class="swap-token-pill">
+                <span style="color:#5B9FE8">$</span>
+                <span id="swapFromToken">USDC</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="swap-arrow-btn">
+            <div class="swap-arrow-circle" onclick="flipSwap()">⇅</div>
+          </div>
+
+          <div class="swap-box">
+            <div class="swap-box-label">
+              <span>Al (tahmini)</span>
+            </div>
+            <div class="swap-token-row">
+              <input type="number" class="swap-amount" id="swapTo" placeholder="0" readonly style="color:var(--text2)">
+              <div class="swap-token-pill">
+                <span style="color:#5BC4E8">€</span>
+                <span id="swapToToken">EURC</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="swap-info">
+            <div class="swap-info-row">
+              <span>Kur</span>
+              <span id="swapRate">1 USDC ≈ 0.924 EURC</span>
+            </div>
+            <div class="swap-info-row">
+              <span>Ağ</span>
+              <span>Arc Testnet</span>
+            </div>
+            <div class="swap-info-row">
+              <span>Slippage</span>
+              <span>0.5%</span>
+            </div>
+          </div>
+
+          <button class="send-btn" style="background:linear-gradient(135deg,var(--green),#00B894)" onclick="swapAlert()">
+            <div class="btn-content">
+              <span>Swap Yap</span>
+            </div>
+          </button>
+          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">
+            Swap yakında aktif — Arc DEX entegrasyonu geliyor
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div id="page-history">
+    <div class="history-filters">
+      <button class="filter-btn active" onclick="filterHistory('all',this)">Tümü</button>
+      <button class="filter-btn" onclick="filterHistory('send',this)">Gönderim</button>
+      <button class="filter-btn" onclick="filterHistory('receive',this)">Alım</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="tx-empty">Henüz işlem yok — transfer sayfasından ilk işlemini yap!</div>
+    </div>
   </div>
 
 </div>
 
-<!-- ethers.js kütüphanesi CDN'den yükle -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-
 <script>
-  // ============================================
-  // ARC TESTNET AYARLARI
-  // ============================================
-  const ARC_CHAIN_ID = 5042002;
-  const ARC_RPC = "https://5042002.rpc.thirdweb.com";
-  const USDC_ADRES = "0x3600000000000000000000000000000000000000";
+// ============================================
+// AYARLAR
+// ============================================
+const ARC_CHAIN_ID = 5042002;
+const ARC_RPC = "https://5042002.rpc.thirdweb.com";
+const USDC_ADRES = "0x3600000000000000000000000000000000000000";
+const EURC_ADRES = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a";
+const USDC_EUR_RATE = 0.924;
 
-  // USDC kontratı için ABI (sadece ihtiyacımız olanlar)
-  const USDC_ABI = [
-    "function decimals() view returns (uint8)",
-    "function balanceOf(address owner) view returns (uint256)",
-    "function transfer(address to, uint256 amount) returns (bool)",
-  ];
+const TOKEN_ABI = [
+  "function decimals() view returns (uint8)",
+  "function balanceOf(address) view returns (uint256)",
+  "function transfer(address, uint256) returns (bool)",
+];
 
-  // Uygulama durumu
-  let baglicüzdan = null;
-  let provider = null;
-  let signer = null;
-  let usdcKontrat = null;
-  let mevcutBakiye = "0";
+// Durum
+let cuzdan = null, provider = null, signer = null;
+let usdcContract = null, eurcContract = null;
+let secilenToken = 'usdc';
+let usdcBakiye = "0", eurcBakiye = "0";
+let txHistory = [];
+let totalSent = 0, txCount = 0;
 
-  // ============================================
-  // CÜZDAN BAĞLAMA
-  // ============================================
-  async function baglanCuzdan() {
-    // MetaMask yüklü mü kontrol et
-    if (!window.ethereum) {
-      alert("MetaMask bulunamadı! Lütfen MetaMask eklentisini kur.");
-      return;
-    }
+// ============================================
+// CÜZDAN BAĞLAMA
+// ============================================
+async function baglan() {
+  if (!window.ethereum) {
+    alert("MetaMask bulunamadı! lütfen MetaMask kur.");
+    return;
+  }
+  try {
+    const hesaplar = await window.ethereum.request({ method: "eth_requestAccounts" });
 
     try {
-      // MetaMask'tan cüzdan adresini iste
-      const hesaplar = await window.ethereum.request({
-        method: "eth_requestAccounts"
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x" + ARC_CHAIN_ID.toString(16) }],
       });
-
-      // Arc Testnet'e geç
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x" + ARC_CHAIN_ID.toString(16) }],
-        });
-      } catch (switchHata) {
-        // Arc Testnet eklenmemişse ekle
-        if (switchHata.code === 4902) {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x" + ARC_CHAIN_ID.toString(16),
-              chainName: "Arc Testnet",
-              nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 6 },
-              rpcUrls: [ARC_RPC],
-              blockExplorerUrls: ["https://testnet.arcscan.app"],
-            }],
-          });
-        }
-      }
-
-      // Provider ve signer oluştur
-      provider = new ethers.BrowserProvider(window.ethereum);
-      signer = await provider.getSigner();
-      baglicüzdan = hesaplar[0];
-
-      // USDC kontratına bağlan
-      usdcKontrat = new ethers.Contract(USDC_ADRES, USDC_ABI, signer);
-
-      // Arayüzü güncelle
-      cüzdanBaglandi(baglicüzdan);
-
-    } catch (hata) {
-      console.error("Bağlantı hatası:", hata);
-      alert("Cüzdan bağlanamadı: " + hata.message);
-    }
-  }
-
-  // Cüzdan bağlandığında arayüzü güncelle
-  async function cüzdanBaglandi(adres) {
-    // Butonu güncelle
-    const btn = document.getElementById("walletBtn");
-    btn.classList.add("connected");
-    document.getElementById("walletName").textContent = "Bağlandı";
-    document.getElementById("walletAddr").textContent =
-      adres.slice(0, 6) + "..." + adres.slice(-4);
-    document.getElementById("walletStatus").classList.add("online");
-
-    // Bakiyeyi çek
-    await bakiyeGuncelle();
-
-    // Gönder butonunu aktif et
-    const sendBtn = document.getElementById("sendBtn");
-    sendBtn.disabled = false;
-    document.getElementById("sendBtnText").textContent = "Gönder →";
-  }
-
-  // Bakiyeyi güncelle
-  async function bakiyeGuncelle() {
-    try {
-      const decimals = await usdcKontrat.decimals();
-      const bakiye = await usdcKontrat.balanceOf(baglicüzdan);
-      mevcutBakiye = ethers.formatUnits(bakiye, decimals);
-
-      document.getElementById("balanceAmount").textContent =
-        parseFloat(mevcutBakiye).toFixed(4);
-      document.getElementById("balanceBox").classList.add("visible");
     } catch (e) {
-      console.error("Bakiye hatası:", e);
-    }
-  }
-
-  // ============================================
-  // USDC GÖNDERME
-  // ============================================
-  async function gonderUSDC() {
-    const alici = document.getElementById("aliciAdres").value.trim();
-    const miktar = document.getElementById("miktar").value.trim();
-
-    // Doğrulama
-    if (!alici || !alici.startsWith("0x")) {
-      alert("Geçerli bir alıcı adresi gir (0x ile başlamalı)");
-      return;
-    }
-    if (!miktar || parseFloat(miktar) <= 0) {
-      alert("Geçerli bir miktar gir");
-      return;
-    }
-    if (parseFloat(miktar) > parseFloat(mevcutBakiye)) {
-      alert("Bakiye yetersiz! Mevcut: " + mevcutBakiye + " USDC");
-      return;
+      if (e.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0x" + ARC_CHAIN_ID.toString(16),
+            chainName: "Arc Testnet",
+            nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 6 },
+            rpcUrls: [ARC_RPC],
+            blockExplorerUrls: ["https://testnet.arcscan.app"],
+          }],
+        });
+      }
     }
 
-    // Yükleme durumuna geç
-    yuklemeBaslat();
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    cuzdan = hesaplar[0];
+    usdcContract = new ethers.Contract(USDC_ADRES, TOKEN_ABI, signer);
+    eurcContract = new ethers.Contract(EURC_ADRES, TOKEN_ABI, signer);
 
-    try {
-      // Miktarı kontrat formatına çevir
-      const decimals = await usdcKontrat.decimals();
-      const transferMiktar = ethers.parseUnits(miktar, decimals);
+    // UI güncelle
+    document.getElementById("connectBtn").classList.add("connected");
+    document.getElementById("statusDot").classList.add("on");
+    document.getElementById("connectLabel").textContent =
+      cuzdan.slice(0,6) + "..." + cuzdan.slice(-4);
 
-      // Transfer işlemini başlat
-      const islem = await usdcKontrat.transfer(alici, transferMiktar);
-
-      // Onay bekle
-      const makbuz = await islem.wait();
-
-      // Başarı göster
-      basariGoster(islem.hash, miktar, alici);
-
-      // Bakiyeyi güncelle
-      await bakiyeGuncelle();
-
-    } catch (hata) {
-      console.error("Transfer hatası:", hata);
-      hataGoster(hata.message || "İşlem başarısız oldu");
-    } finally {
-      yuklemeKapat();
-    }
-  }
-
-  // ============================================
-  // YARDIMCI FONKSİYONLAR
-  // ============================================
-
-  function maxMiktar() {
-    document.getElementById("miktar").value = parseFloat(mevcutBakiye).toFixed(4);
-  }
-
-  function setMiktar(deger) {
-    document.getElementById("miktar").value = deger;
-  }
-
-  function yuklemeBaslat() {
-    const btn = document.getElementById("sendBtn");
-    btn.classList.add("loading");
-    btn.disabled = true;
-    document.getElementById("sendBtnText").textContent = "Onay bekleniyor...";
-    document.getElementById("spinner").style.display = "block";
-    document.getElementById("resultBox").className = "result-box";
-  }
-
-  function yuklemeKapat() {
-    const btn = document.getElementById("sendBtn");
-    btn.classList.remove("loading");
-    btn.disabled = false;
+    document.getElementById("sendBtn").disabled = false;
     document.getElementById("sendBtnText").textContent = "Gönder →";
-    document.getElementById("spinner").style.display = "none";
+
+    await bakiyeleriGuncelle();
+
+    window.ethereum.on("accountsChanged", (h) => { if(h.length) { cuzdan=h[0]; baglan(); } else location.reload(); });
+
+  } catch (e) {
+    console.error(e);
+    alert("Bağlantı hatası: " + e.message);
+  }
+}
+
+async function bakiyeleriGuncelle() {
+  try {
+    const uDec = await usdcContract.decimals();
+    const uBal = await usdcContract.balanceOf(cuzdan);
+    usdcBakiye = ethers.formatUnits(uBal, uDec);
+
+    const eDec = await eurcContract.decimals();
+    const eBal = await eurcContract.balanceOf(cuzdan);
+    eurcBakiye = ethers.formatUnits(eBal, eDec);
+
+    document.getElementById("usdcBalance").textContent = parseFloat(usdcBakiye).toFixed(4) + " USDC";
+    document.getElementById("usdcUsd").textContent = "≈ $" + parseFloat(usdcBakiye).toFixed(2) + " USD";
+    document.getElementById("eurcBalance").textContent = parseFloat(eurcBakiye).toFixed(4) + " EURC";
+    document.getElementById("eurcUsd").textContent = "≈ €" + parseFloat(eurcBakiye).toFixed(2) + " EUR";
+    document.getElementById("swapFromBal").textContent =
+      secilenToken === 'usdc' ? parseFloat(usdcBakiye).toFixed(4) : parseFloat(eurcBakiye).toFixed(4);
+  } catch(e) { console.error("Bakiye hatası:", e); }
+}
+
+// ============================================
+// TRANSFER
+// ============================================
+async function gonder() {
+  if (!cuzdan) { alert("Önce cüzdanını bağla!"); return; }
+
+  const alici = document.getElementById("aliciAdres").value.trim();
+  const miktarStr = document.getElementById("miktar").value.trim();
+
+  if (!alici || !alici.startsWith("0x")) { alert("Geçerli alıcı adresi gir"); return; }
+  if (!miktarStr || parseFloat(miktarStr) <= 0) { alert("Geçerli miktar gir"); return; }
+
+  const bakiye = secilenToken === 'usdc' ? usdcBakiye : eurcBakiye;
+  if (parseFloat(miktarStr) > parseFloat(bakiye)) {
+    alert("Bakiye yetersiz! Mevcut: " + parseFloat(bakiye).toFixed(4));
+    return;
   }
 
-  function basariGoster(hash, miktar, alici) {
-    const box = document.getElementById("resultBox");
-    box.className = "result-box success";
-    document.getElementById("resultTitle").textContent =
-      "✓ " + miktar + " USDC başarıyla gönderildi!";
-    document.getElementById("resultHash").textContent =
-      "İşlem: " + hash;
-    const link = document.getElementById("resultLink");
-    link.href = "https://testnet.arcscan.app/tx/" + hash;
-    link.style.display = "inline-flex";
+  yuklemeAc();
+  try {
+    const contract = secilenToken === 'usdc' ? usdcContract : eurcContract;
+    const decimals = await contract.decimals();
+    const miktar = ethers.parseUnits(miktarStr, decimals);
 
-    // Formu temizle
+    const tx = await contract.transfer(alici, miktar);
+    const receipt = await tx.wait();
+
+    // Geçmişe ekle
+    const yeniTx = {
+      type: 'send',
+      hash: tx.hash,
+      amount: miktarStr,
+      token: secilenToken.toUpperCase(),
+      to: alici,
+      time: new Date().toLocaleTimeString('tr-TR'),
+      block: receipt.blockNumber,
+    };
+    txHistory.unshift(yeniTx);
+    totalSent += parseFloat(miktarStr);
+    txCount++;
+
+    // Statsları güncelle
+    document.getElementById("statTxCount").textContent = txCount;
+    document.getElementById("statSent").textContent = totalSent.toFixed(2) + " " + secilenToken.toUpperCase();
+
+    guncelleTxListesi();
+    basariGoster(tx.hash, miktarStr, secilenToken.toUpperCase());
+    await bakiyeleriGuncelle();
+
     document.getElementById("miktar").value = "";
     document.getElementById("aliciAdres").value = "";
+
+  } catch(e) {
+    console.error(e);
+    hataGoster(e.message || "İşlem başarısız");
+  } finally {
+    yuklemeKapat();
+  }
+}
+
+// ============================================
+// TOKEN SEÇİMİ
+// ============================================
+function setToken(token) {
+  secilenToken = token;
+  document.getElementById("selUsdc").classList.toggle("active", token === 'usdc');
+  document.getElementById("selEurc").classList.toggle("active", token === 'eurc');
+  if (cuzdan) {
+    document.getElementById("swapFromBal").textContent =
+      token === 'usdc' ? parseFloat(usdcBakiye).toFixed(4) : parseFloat(eurcBakiye).toFixed(4);
+  }
+}
+
+function maxMiktar() {
+  const b = secilenToken === 'usdc' ? usdcBakiye : eurcBakiye;
+  document.getElementById("miktar").value = parseFloat(b).toFixed(4);
+}
+
+function setMiktar(v) { document.getElementById("miktar").value = v; }
+
+// ============================================
+// SWAP (simülasyon)
+// ============================================
+let swapFlipped = false;
+
+function calcSwap() {
+  const val = parseFloat(document.getElementById("swapFrom").value) || 0;
+  const rate = swapFlipped ? (1/USDC_EUR_RATE) : USDC_EUR_RATE;
+  document.getElementById("swapTo").value = val ? (val * rate).toFixed(4) : "";
+  document.getElementById("swapRate").textContent = swapFlipped
+    ? "1 EURC ≈ " + (1/USDC_EUR_RATE).toFixed(3) + " USDC"
+    : "1 USDC ≈ " + USDC_EUR_RATE + " EURC";
+}
+
+function flipSwap() {
+  swapFlipped = !swapFlipped;
+  const ft = document.getElementById("swapFromToken");
+  const tt = document.getElementById("swapToToken");
+  [ft.textContent, tt.textContent] = [tt.textContent, ft.textContent];
+  document.getElementById("swapFrom").value = "";
+  document.getElementById("swapTo").value = "";
+}
+
+function swapAlert() {
+  alert("Swap özelliği yakında! Arc DEX entegrasyonu üzerinde çalışıyoruz.");
+}
+
+// ============================================
+// TX GEÇMİŞİ
+// ============================================
+function guncelleTxListesi() {
+  const son3 = txHistory.slice(0,3);
+
+  // Dashboard
+  const dash = document.getElementById("dashTxList");
+  if (son3.length === 0) {
+    dash.innerHTML = '<div class="tx-empty">Henüz işlem yok</div>';
+  } else {
+    dash.innerHTML = son3.map(tx => `
+      <div class="tx-item">
+        <div class="tx-icon send">↗</div>
+        <div class="tx-info">
+          <div class="tx-type">${tx.token} Gönderildi</div>
+          <div class="tx-addr">${tx.to.slice(0,10)}...${tx.to.slice(-6)}</div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount send">-${tx.amount} ${tx.token}</div>
+          <div class="tx-time">${tx.time}</div>
+        </div>
+      </div>
+    `).join('');
   }
 
-  function hataGoster(mesaj) {
-    const box = document.getElementById("resultBox");
-    box.className = "result-box error";
-    document.getElementById("resultTitle").textContent = "✗ İşlem başarısız";
-    document.getElementById("resultHash").textContent = mesaj;
-    document.getElementById("resultLink").style.display = "none";
+  // History sayfası
+  guncelleHistory('all');
+}
+
+function guncelleHistory(filter) {
+  const list = document.getElementById("historyList");
+  const filtered = filter === 'all' ? txHistory : txHistory.filter(t => t.type === filter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="tx-empty">Henüz işlem yok</div>';
+    return;
   }
 
-  // Hesap değişikliğini takip et
-  if (window.ethereum) {
-    window.ethereum.on("accountsChanged", (hesaplar) => {
-      if (hesaplar.length === 0) {
-        location.reload();
-      } else {
-        baglicüzdan = hesaplar[0];
-        cüzdanBaglandi(baglicüzdan);
-      }
-    });
-  }
+  list.innerHTML = filtered.map(tx => `
+    <div class="history-item">
+      <div class="hi-icon ${tx.type}">${tx.type === 'send' ? '↗' : '↙'}</div>
+      <div class="hi-info">
+        <div class="hi-type">${tx.token} ${tx.type === 'send' ? 'Gönderildi' : 'Alındı'}</div>
+        <div class="hi-addr">${tx.to.slice(0,14)}...${tx.to.slice(-6)}</div>
+      </div>
+      <div class="hi-amount ${tx.type}">
+        ${tx.type === 'send' ? '-' : '+'}${tx.amount} ${tx.token}
+      </div>
+      <div class="hi-status">
+        <div class="hi-badge confirmed">Onaylandı</div>
+        <div class="hi-time">${tx.time} · Blok ${tx.block}</div>
+        <div style="margin-top:4px">
+          <a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank"
+             style="font-size:10px;color:var(--accent);font-family:'IBM Plex Mono',monospace;">
+            ArcScan →
+          </a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterHistory(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  guncelleHistory(filter);
+}
+
+// ============================================
+// SAYFA GEÇİŞİ
+// ============================================
+function switchPage(page, btn) {
+  document.querySelectorAll('[id^=page-]').forEach(p => p.style.display = 'none');
+  document.getElementById('page-' + page).style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// ============================================
+// UI YARDIMCILARI
+// ============================================
+function yuklemeAc() {
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true; btn.classList.add("loading");
+  document.getElementById("sendBtnText").textContent = "İşlem onaylanıyor...";
+  document.getElementById("spinner").style.display = "block";
+  document.getElementById("resultBox").className = "result-box";
+}
+
+function yuklemeKapat() {
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = false; btn.classList.remove("loading");
+  document.getElementById("sendBtnText").textContent = "Gönder →";
+  document.getElementById("spinner").style.display = "none";
+}
+
+function basariGoster(hash, miktar, token) {
+  const box = document.getElementById("resultBox");
+  box.className = "result-box success";
+  document.getElementById("resultTitle").textContent = "✓ " + miktar + " " + token + " başarıyla gönderildi!";
+  document.getElementById("resultHash").textContent = "Hash: " + hash;
+  const lnk = document.getElementById("resultLink");
+  lnk.href = "https://testnet.arcscan.app/tx/" + hash;
+  lnk.style.display = "inline-flex";
+}
+
+function hataGoster(msg) {
+  const box = document.getElementById("resultBox");
+  box.className = "result-box error";
+  document.getElementById("resultTitle").textContent = "✗ İşlem başarısız";
+  document.getElementById("resultHash").textContent = msg;
+  document.getElementById("resultLink").style.display = "none";
+}
 </script>
 </body>
 </html>
