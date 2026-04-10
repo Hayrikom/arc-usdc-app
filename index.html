@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arc USDC Transfer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --border-bright: #3d3d55;
+      --accent: #5B6EF5;
+      --accent-glow: rgba(91, 110, 245, 0.25);
+      --accent2: #00E5B0;
+      --accent2-glow: rgba(0, 229, 176, 0.2);
+      --text: #f0f0f8;
+      --text-muted: #7070a0;
+      --text-dim: #404060;
+      --success: #00E5B0;
+      --error: #FF4D6D;
+      --warning: #FFB547;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    /* Arka plan efekti */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: -20%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(ellipse, rgba(91,110,245,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -30%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(ellipse, rgba(0,229,176,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Üst başlık */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 12px var(--accent2-glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .logo-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .title span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Ana kart */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.5;
+    }
+
+    /* Cüzdan bölümü */
+    .wallet-section {
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .wallet-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      gap: 12px;
+    }
+
+    .wallet-btn:hover {
+      border-color: var(--accent);
+      background: rgba(91,110,245,0.08);
+    }
+
+    .wallet-btn.connected {
+      border-color: var(--accent2);
+      background: rgba(0,229,176,0.05);
+    }
+
+    .wallet-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #F6851B, #E4761B);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .wallet-info {
+      flex: 1;
+      text-align: left;
+    }
+
+    .wallet-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .wallet-address {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .wallet-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .wallet-status.online {
+      background: var(--accent2);
+      box-shadow: 0 0 8px var(--accent2-glow);
+    }
+
+    /* Bakiye kutusu */
+    .balance-box {
+      display: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .balance-box.visible {
+      display: flex;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .balance-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .balance-amount {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    .balance-unit {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* Ayraç */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* Form alanları */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      background: rgba(91,110,245,0.05);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .form-input.address-input {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* Miktar satırı */
+    .amount-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .amount-row .form-input {
+      flex: 1;
+    }
+
+    .max-btn {
+      padding: 0 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      letter-spacing: 0.05em;
+    }
+
+    .max-btn:hover {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+    }
+
+    /* Hızlı miktar butonları */
+    .quick-amounts {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .quick-btn {
+      flex: 1;
+      padding: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .quick-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* Gönder butonu */
+    .send-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.01em;
+    }
+
+    .send-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    }
+
+    .send-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(91,110,245,0.4);
+    }
+
+    .send-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .send-btn.loading {
+      pointer-events: none;
+    }
+
+    .btn-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .send-btn.loading .spinner {
+      display: block;
+    }
+
+    /* Sonuç kutusu */
+    .result-box {
+      display: none;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-top: 16px;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .result-box.success {
+      display: block;
+      background: rgba(0,229,176,0.06);
+      border: 1px solid rgba(0,229,176,0.25);
+    }
+
+    .result-box.error {
+      display: block;
+      background: rgba(255,77,109,0.06);
+      border: 1px solid rgba(255,77,109,0.25);
+    }
+
+    .result-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .result-box.success .result-title { color: var(--success); }
+    .result-box.error .result-title { color: var(--error); }
+
+    .result-hash {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent2);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .result-link:hover { opacity: 0.7; }
+
+    /* Ağ bilgisi */
+    .network-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+
+    .net-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--warning);
+      box-shadow: 0 0 8px rgba(255,181,71,0.4);
+      flex-shrink: 0;
+    }
+
+    .net-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .net-text strong {
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    /* Animasyonlar */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent2-glow); }
+      50% { opacity: 0.6; box-shadow: 0 0 16px var(--accent2-glow); }
+    }
+
+    /* Alt bilgi */
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+
+    .footer-text {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .footer-text a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .footer-text a:hover { color: var(--accent2); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Başlık -->
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-dot"></div>
+      <span class="logo-text">Arc Testnet</span>
+      <div class="logo-dot"></div>
+    </div>
+    <h1 class="title">USDC <span>Transfer</span></h1>
+    <p class="subtitle">Arc Testnet üzerinde anında gönder</p>
+  </div>
+
+  <!-- Ağ bildirimi -->
+  <div class="network-badge">
+    <div class="net-dot"></div>
+    <span class="net-text"><strong>TESTNET</strong> — Gerçek para değil, güvenle test et</span>
+  </div>
+
+  <!-- Ana kart -->
+  <div class="card">
+
+    <!-- Cüzdan bölümü -->
+    <div class="wallet-section">
+      <div class="section-label">Cüzdan</div>
+
+      <button class="wallet-btn" id="walletBtn" onclick="baglanCuzdan()">
+        <div class="wallet-icon">🦊</div>
+        <div class="wallet-info">
+          <div class="wallet-name" id="walletName">MetaMask ile Bağlan</div>
+          <div class="wallet-address" id="walletAddr">Cüzdanını bağla</div>
+        </div>
+        <div class="wallet-status" id="walletStatus"></div>
+      </button>
+
+      <div class="balance-box" id="balanceBox">
+        <span class="balance-label">USDC Bakiyesi</span>
+        <div>
+          <span class="balance-amount" id="balanceAmount">—</span>
+          <span class="balance-unit">USDC</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Transfer formu -->
+    <div class="form-group">
+      <label class="form-label">Alıcı Adres</label>
+      <input
+        type="text"
+        class="form-input address-input"
+        id="aliciAdres"
+        placeholder="0x..."
+      />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Miktar</label>
+      <div class="amount-row">
+        <input
+          type="number"
+          class="form-input"
+          id="miktar"
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+        />
+        <button class="max-btn" onclick="maxMiktar()">MAX</button>
+      </div>
+      <div class="quick-amounts">
+        <button class="quick-btn" onclick="setMiktar('0.1')">0.1</button>
+        <button class="quick-btn" onclick="setMiktar('0.5')">0.5</button>
+        <button class="quick-btn" onclick="setMiktar('1')">1.0</button>
+        <button class="quick-btn" onclick="setMiktar('5')">5.0</button>
+      </div>
+    </div>
+
+    <button class="send-btn" id="sendBtn" onclick="gonderUSDC()" disabled>
+      <div class="btn-content">
+        <div class="spinner" id="spinner"></div>
+        <span id="sendBtnText">Önce cüzdanını bağla</span>
+      </div>
+    </button>
+
+    <!-- Sonuç -->
+    <div class="result-box" id="resultBox">
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-hash" id="resultHash"></div>
+      <a class="result-link" id="resultLink" href="#" target="_blank">
+        ArcScan'de görüntüle →
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Alt bilgi -->
+  <div class="footer">
+    <p class="footer-text">
+      İşlemler <a href="https://testnet.arcscan.app" target="_blank">testnet.arcscan.app</a>'te görünür
+    </p>
+  </div>
+
+</div>
+
+<!-- ethers.js kütüphanesi CDN'den yükle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+<script>
+  // ============================================
+  // ARC TESTNET AYARLARI
+  // ============================================
+  const ARC_CHAIN_ID = 5042002;
+  const ARC_RPC = "https://5042002.rpc.thirdweb.com";
+  const USDC_ADRES = "0x3600000000000000000000000000000000000000";
+
+  // USDC kontratı için ABI (sadece ihtiyacımız olanlar)
+  const USDC_ABI = [
+    "function decimals() view returns (uint8)",
+    "function balanceOf(address owner) view returns (uint256)",
+    "function transfer(address to, uint256 amount) returns (bool)",
+  ];
+
+  // Uygulama durumu
+  let baglicüzdan = null;
+  let provider = null;
+  let signer = null;
+  let usdcKontrat = null;
+  let mevcutBakiye = "0";
+
+  // ============================================
+  // CÜZDAN BAĞLAMA
+  // ============================================
+  async function baglanCuzdan() {
+    // MetaMask yüklü mü kontrol et
+    if (!window.ethereum) {
+      alert("MetaMask bulunamadı! Lütfen MetaMask eklentisini kur.");
+      return;
+    }
+
+    try {
+      // MetaMask'tan cüzdan adresini iste
+      const hesaplar = await window.ethereum.request({
+        method: "eth_requestAccounts"
+      });
+
+      // Arc Testnet'e geç
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x" + ARC_CHAIN_ID.toString(16) }],
+        });
+      } catch (switchHata) {
+        // Arc Testnet eklenmemişse ekle
+        if (switchHata.code === 4902) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x" + ARC_CHAIN_ID.toString(16),
+              chainName: "Arc Testnet",
+              nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 6 },
+              rpcUrls: [ARC_RPC],
+              blockExplorerUrls: ["https://testnet.arcscan.app"],
+            }],
+          });
+        }
+      }
+
+      // Provider ve signer oluştur
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      baglicüzdan = hesaplar[0];
+
+      // USDC kontratına bağlan
+      usdcKontrat = new ethers.Contract(USDC_ADRES, USDC_ABI, signer);
+
+      // Arayüzü güncelle
+      cüzdanBaglandi(baglicüzdan);
+
+    } catch (hata) {
+      console.error("Bağlantı hatası:", hata);
+      alert("Cüzdan bağlanamadı: " + hata.message);
+    }
+  }
+
+  // Cüzdan bağlandığında arayüzü güncelle
+  async function cüzdanBaglandi(adres) {
+    // Butonu güncelle
+    const btn = document.getElementById("walletBtn");
+    btn.classList.add("connected");
+    document.getElementById("walletName").textContent = "Bağlandı";
+    document.getElementById("walletAddr").textContent =
+      adres.slice(0, 6) + "..." + adres.slice(-4);
+    document.getElementById("walletStatus").classList.add("online");
+
+    // Bakiyeyi çek
+    await bakiyeGuncelle();
+
+    // Gönder butonunu aktif et
+    const sendBtn = document.getElementById("sendBtn");
+    sendBtn.disabled = false;
+    document.getElementById("sendBtnText").textContent = "Gönder →";
+  }
+
+  // Bakiyeyi güncelle
+  async function bakiyeGuncelle() {
+    try {
+      const decimals = await usdcKontrat.decimals();
+      const bakiye = await usdcKontrat.balanceOf(baglicüzdan);
+      mevcutBakiye = ethers.formatUnits(bakiye, decimals);
+
+      document.getElementById("balanceAmount").textContent =
+        parseFloat(mevcutBakiye).toFixed(4);
+      document.getElementById("balanceBox").classList.add("visible");
+    } catch (e) {
+      console.error("Bakiye hatası:", e);
+    }
+  }
+
+  // ============================================
+  // USDC GÖNDERME
+  // ============================================
+  async function gonderUSDC() {
+    const alici = document.getElementById("aliciAdres").value.trim();
+    const miktar = document.getElementById("miktar").value.trim();
+
+    // Doğrulama
+    if (!alici || !alici.startsWith("0x")) {
+      alert("Geçerli bir alıcı adresi gir (0x ile başlamalı)");
+      return;
+    }
+    if (!miktar || parseFloat(miktar) <= 0) {
+      alert("Geçerli bir miktar gir");
+      return;
+    }
+    if (parseFloat(miktar) > parseFloat(mevcutBakiye)) {
+      alert("Bakiye yetersiz! Mevcut: " + mevcutBakiye + " USDC");
+      return;
+    }
+
+    // Yükleme durumuna geç
+    yuklemeBaslat();
+
+    try {
+      // Miktarı kontrat formatına çevir
+      const decimals = await usdcKontrat.decimals();
+      const transferMiktar = ethers.parseUnits(miktar, decimals);
+
+      // Transfer işlemini başlat
+      const islem = await usdcKontrat.transfer(alici, transferMiktar);
+
+      // Onay bekle
+      const makbuz = await islem.wait();
+
+      // Başarı göster
+      basariGoster(islem.hash, miktar, alici);
+
+      // Bakiyeyi güncelle
+      await bakiyeGuncelle();
+
+    } catch (hata) {
+      console.error("Transfer hatası:", hata);
+      hataGoster(hata.message || "İşlem başarısız oldu");
+    } finally {
+      yuklemeKapat();
+    }
+  }
+
+  // ============================================
+  // YARDIMCI FONKSİYONLAR
+  // ============================================
+
+  function maxMiktar() {
+    document.getElementById("miktar").value = parseFloat(mevcutBakiye).toFixed(4);
+  }
+
+  function setMiktar(deger) {
+    document.getElementById("miktar").value = deger;
+  }
+
+  function yuklemeBaslat() {
+    const btn = document.getElementById("sendBtn");
+    btn.classList.add("loading");
+    btn.disabled = true;
+    document.getElementById("sendBtnText").textContent = "Onay bekleniyor...";
+    document.getElementById("spinner").style.display = "block";
+    document.getElementById("resultBox").className = "result-box";
+  }
+
+  function yuklemeKapat() {
+    const btn = document.getElementById("sendBtn");
+    btn.classList.remove("loading");
+    btn.disabled = false;
+    document.getElementById("sendBtnText").textContent = "Gönder →";
+    document.getElementById("spinner").style.display = "none";
+  }
+
+  function basariGoster(hash, miktar, alici) {
+    const box = document.getElementById("resultBox");
+    box.className = "result-box success";
+    document.getElementById("resultTitle").textContent =
+      "✓ " + miktar + " USDC başarıyla gönderildi!";
+    document.getElementById("resultHash").textContent =
+      "İşlem: " + hash;
+    const link = document.getElementById("resultLink");
+    link.href = "https://testnet.arcscan.app/tx/" + hash;
+    link.style.display = "inline-flex";
+
+    // Formu temizle
+    document.getElementById("miktar").value = "";
+    document.getElementById("aliciAdres").value = "";
+  }
+
+  function hataGoster(mesaj) {
+    const box = document.getElementById("resultBox");
+    box.className = "result-box error";
+    document.getElementById("resultTitle").textContent = "✗ İşlem başarısız";
+    document.getElementById("resultHash").textContent = mesaj;
+    document.getElementById("resultLink").style.display = "none";
+  }
+
+  // Hesap değişikliğini takip et
+  if (window.ethereum) {
+    window.ethereum.on("accountsChanged", (hesaplar) => {
+      if (hesaplar.length === 0) {
+        location.reload();
+      } else {
+        baglicüzdan = hesaplar[0];
+        cüzdanBaglandi(baglicüzdan);
+      }
+    });
+  }
+</script>
+</body>
+</html>
