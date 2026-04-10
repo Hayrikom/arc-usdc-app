@@ -743,7 +743,7 @@
     <span class="nav-badge">TESTNET</span>
   </div>
   <div class="nav-right">
-    <button class="connect-btn" id="connectBtn" onclick="baglan()">
+    <button class="connect-btn" id="connectBtn" onclick="cüzdanToggle()">
       <div class="status-dot" id="statusDot"></div>
       <span id="connectLabel">Cüzdan Bağla</span>
     </button>
@@ -994,6 +994,23 @@ let totalSent = 0, txCount = 0;
 // ============================================
 // CÜZDAN BAĞLAMA
 // ============================================
+function cüzdanToggle() {
+  if (cuzdan) {
+    cuzdan = null; provider = null; signer = null;
+    usdcContract = null; eurcContract = null;
+    document.getElementById("connectBtn").classList.remove("connected");
+    document.getElementById("statusDot").classList.remove("on");
+    document.getElementById("connectLabel").textContent = "Cüzdan Bağla";
+    document.getElementById("sendBtn").disabled = true;
+    document.getElementById("sendBtnText").textContent = "Cüzdan bağlı değil";
+    document.getElementById("usdcBalance").textContent = "—";
+    document.getElementById("eurcBalance").textContent = "—";
+    document.getElementById("usdcUsd").textContent = "Bağlan, bakiyeni gör";
+    document.getElementById("eurcUsd").textContent = "Bağlan, bakiyeni gör";
+  } else {
+    baglan();
+  }
+}
 async function baglan() {
   if (!window.ethereum) {
     alert("MetaMask bulunamadı! lütfen MetaMask kur.");
